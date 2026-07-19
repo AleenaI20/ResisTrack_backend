@@ -61,12 +61,12 @@ Acquired antibiotic resistance — especially in organisms like carbapenem-resis
                        (held out by clade — never by genome)
                                      │
                                      ▼
-                     PER-ANTIBIOTIC PREDICTOR  *(in progress)*
+                     PER-ANTIBIOTIC PREDICTOR  
                   likely to work / likely to fail / no-call
                      + calibrated confidence + evidence tier
                                      │
                                      ▼
-                  STREAMLIT DECISION-REPORT DEMO  *(in progress)*
+                  STREAMLIT DECISION-REPORT DEMO  
 ```
 
 The two tracks are computed **independently** — Track B's clades come from whole-genome k-mer content, never from AMR genes — so that "lineage-based evidence" and "gene-based evidence" remain genuinely separate signals rather than the same information restated twice.
