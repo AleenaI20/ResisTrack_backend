@@ -78,9 +78,9 @@ The two tracks are computed **independently** — Track B's clades come from who
 | Track B — Phylogenetics (genome sketching, distance matrix, tree, clade assignment) | ✅ Done |
 | Track A — AMR annotation (AMRFinderPlus integration, gene/mutation parsing) | ✅ Done |
 | Join — master feature table (Track A + Track B) | ✅ Done |
-| Grouped train/calibration/test split by clade | 🔜 In progress |
-| Per-antibiotic predictor + calibration | 🔜 In progress |
-| Streamlit decision-report demo | 🔜 In progress |
+| Grouped train/calibration/test split by clade | ✅ Done |
+| Per-antibiotic predictor + calibration | ✅ Done |
+| Streamlit decision-report demo | ✅ Done |
 
 ## Repo structure
 
