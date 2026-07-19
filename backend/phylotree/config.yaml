@@ -1,0 +1,32 @@
+# Central config for the Track B (phylogenetics) pipeline.
+# Change values here rather than hardcoding them in scripts.
+
+organism:
+  genus_species: "Klebsiella pneumoniae"
+
+download:
+  # Raised from 150 (initial debug run) to 500 — more genomes fills out
+  # natural clonal groups and reduces the singleton-clade problem seen at
+  # n=149, more effectively than threshold-tuning alone.
+  max_genomes: 500
+  raw_dir: "data/raw"
+  fasta_subdir: "fasta"
+  labels_file: "amr_labels.csv"        # from genome_amr (used only to pick which genomes to pull)
+  metadata_file: "genome_metadata.csv" # minimal, cleaned genome metadata
+
+sketch:
+  kmer_size: 21
+  scaled: 1000          # sourmash MinHash scaled factor (lower = more sensitive, slower)
+  signatures_dir: "data/processed/signatures"
+
+distance:
+  matrix_file: "data/processed/distance_matrix.csv"
+
+tree:
+  newick_file: "outputs/tree.nwk"
+  png_file: "outputs/tree.png"
+
+clustering:
+  method: "average"        # scipy linkage method
+  distance_threshold: 0.08 # cut height; tune and justify in write-up
+  output_file: "outputs/clade_assignments.csv"

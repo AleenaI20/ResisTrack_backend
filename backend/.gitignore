@@ -1,0 +1,15 @@
+.env
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+
+# Regenerable phylogenetics artifacts
+data/raw/
+data/processed/
+outputs/*.png
+phylotree/data/raw/
+phylotree/data/processed/
+phylotree/outputs/*.png
+phylotree/**/__pycache__/
