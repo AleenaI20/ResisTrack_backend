@@ -22,15 +22,24 @@ from app.models import (
     GenomeSequenceResponse,
     PhylogenyBuildRequest,
     PhylogenyBuildResponse,
+    PredictMetaResponse,
+    PredictRequest,
+    PredictResponse,
 )
 from app.ncbi import NcbiClient, NcbiError, NcbiResponseError
 from app.phylogeny import PhylogenyError, build_phylogeny
+from app.predict import (
+    GenomeFirewallPredictor,
+    PredictorError,
+    UnsupportedOrganismError,
+)
 
 settings = Settings.from_environment()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    app.state.predictor = GenomeFirewallPredictor.load(settings.model_path)
     ncbi_timeout = httpx.Timeout(30.0, connect=10.0)
     amrfinder_timeout = httpx.Timeout(300.0, connect=15.0)
     async with httpx.AsyncClient(
@@ -74,10 +83,18 @@ def get_amrfinder_client(request: Request) -> AmrFinderClient:
     return request.app.state.amrfinder
 
 
+def get_predictor(request: Request) -> GenomeFirewallPredictor:
+    return request.app.state.predictor
+
+
 NcbiDependency = Annotated[NcbiClient, Depends(get_ncbi_client)]
 AmrFinderDependency = Annotated[
     AmrFinderClient,
     Depends(get_amrfinder_client),
+]
+PredictorDependency = Annotated[
+    GenomeFirewallPredictor,
+    Depends(get_predictor),
 ]
 
 
@@ -157,3 +174,23 @@ async def create_phylogenetic_tree(
         return await run_in_threadpool(build_phylogeny, payload)
     except PhylogenyError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/predict/meta", response_model=PredictMetaResponse)
+async def predict_metadata(
+    predictor: PredictorDependency,
+) -> PredictMetaResponse:
+    return predictor.metadata()
+
+
+@app.post("/api/predict", response_model=PredictResponse)
+async def predict_antibiotic_response(
+    payload: PredictRequest,
+    predictor: PredictorDependency,
+) -> PredictResponse:
+    try:
+        return await run_in_threadpool(predictor.predict, payload)
+    except UnsupportedOrganismError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except PredictorError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

@@ -14,6 +14,7 @@ Backend services for Resistrace:
 - `GET /api/ncbi/genomes/search?organism=Mycobacterium%20tuberculosis`
 - `GET /api/ncbi/genomes/{uid}`
 - `POST /api/phylogeny/build`
+- `POST /api/predict`
 
 The NCBI sequence endpoint returns the FASTA header and genome sequence as
 JSON. It does not write a FASTA file to disk.
@@ -88,6 +89,52 @@ Response fields:
 - `distance_matrix`: genome-to-genome Jaccard distances
 - `clade_assignments`: discrete clade IDs for grouped train/test splits
 - `parameters`: the exact settings used for the run
+
+## Genome Firewall predictor (`POST /api/predict`)
+
+The predictor loads `genome_firewall_models.pkl` once at application startup
+with joblib. The trusted artifact contains five scikit-learn
+logistic-regression models for **Klebsiella pneumoniae**: meropenem,
+gentamicin, piperacillin/tazobactam, ciprofloxacin, and ceftazidime.
+
+Send the `detected_features` object returned by `POST /api/amrfinderplus`:
+
+```bash
+curl -s http://127.0.0.1:8000/api/predict \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "organism": "Klebsiella pneumoniae",
+    "detected_features": {
+      "gene:blaKPC-2": true,
+      "mutation:gyrA_S83L": true
+    }
+  }'
+```
+
+The service maps AMRFinderPlus names into each model's exact `active_genes`
+feature order. It returns per-drug calls, model scores, resistance
+probabilities, evidence categories, and unmatched input features. Per-drug
+uncertainty margins produce explicit no-calls.
+
+AMRFinderPlus reports resistance markers, not the complete set of molecular
+drug targets. A model result that otherwise favors "likely to work" is
+therefore conservatively returned as **no-call** unless target presence can be
+confirmed. This prevents absence of a resistance marker from being presented
+as susceptibility. Every response includes the mandatory laboratory-testing
+disclaimer.
+
+The artifact is scoped to K. pneumoniae. Requests naming another organism are
+rejected. Local FASTA inputs without organism metadata are accepted for demo
+use, with an explicit scope assumption in the frontend.
+
+Override the trusted local artifact path with:
+
+```bash
+export GENOME_FIREWALL_MODEL_PATH="/absolute/path/to/models.pkl"
+```
+
+Never load an untrusted artifact: joblib uses Python's pickle model and can
+execute code during deserialization.
 
 ## Run locally
 

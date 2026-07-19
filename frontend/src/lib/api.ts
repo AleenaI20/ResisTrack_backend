@@ -7,6 +7,10 @@ import type {
   PhylogenyBuildRequest,
   PhylogenyBuildResponse,
 } from "@/types/phylogeny"
+import type {
+  PredictionMeta,
+  PredictionReport,
+} from "@/types/prediction"
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ??
@@ -96,4 +100,26 @@ export function buildPhylogeny(
     body: JSON.stringify(body),
     signal,
   })
+}
+
+export function predictAntibiotics(
+  detectedFeatures: Record<string, boolean>,
+  organism?: string | null,
+  signal?: AbortSignal
+): Promise<PredictionReport> {
+  return request<PredictionReport>("/api/predict", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      detected_features: detectedFeatures,
+      organism: organism || null,
+    }),
+    signal,
+  })
+}
+
+export function fetchPredictMeta(
+  signal?: AbortSignal
+): Promise<PredictionMeta> {
+  return request<PredictionMeta>("/api/predict/meta", { signal })
 }

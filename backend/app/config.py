@@ -1,5 +1,11 @@
 from dataclasses import dataclass
 from os import getenv
+from pathlib import Path
+
+
+DEFAULT_MODEL_PATH = (
+    Path(__file__).resolve().parent.parent / "genome_firewall_models.pkl"
+)
 
 
 @dataclass(frozen=True)
@@ -8,6 +14,7 @@ class Settings:
     ncbi_api_key: str | None
     amrfinderplus_api_url: str
     cors_origins: tuple[str, ...]
+    model_path: Path
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -27,4 +34,7 @@ class Settings:
                 "https://cams-ftp-veteran-reported.trycloudflare.com",
             ).rstrip("/"),
             cors_origins=origins,
+            model_path=Path(
+                getenv("GENOME_FIREWALL_MODEL_PATH", str(DEFAULT_MODEL_PATH))
+            ).expanduser(),
         )

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import {
   AlertCircle,
   ArrowLeft,
+  ArrowRight,
   GitBranch,
   LoaderCircle,
   RefreshCw,
@@ -33,6 +34,7 @@ type PhylogenyPageProps = {
   result: PhylogenyBuildResponse | null
   onResultChange: (result: PhylogenyBuildResponse | null) => void
   onBack: () => void
+  onContinue: () => void
 }
 
 export function PhylogenyPage({
@@ -41,6 +43,7 @@ export function PhylogenyPage({
   result,
   onResultChange,
   onBack,
+  onContinue,
 }: PhylogenyPageProps) {
   const [isBuilding, setIsBuilding] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -164,23 +167,34 @@ export function PhylogenyPage({
           <ArrowLeft aria-hidden="true" />
           Back to analysis
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isBuilding}
-          onClick={() => {
-            onResultChange(null)
-            setBuildNonce((value) => value + 1)
-          }}
-          className="rounded-md"
-        >
-          {isBuilding ? (
-            <LoaderCircle className="animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw aria-hidden="true" />
-          )}
-          Rebuild tree
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isBuilding}
+            onClick={() => {
+              onResultChange(null)
+              setBuildNonce((value) => value + 1)
+            }}
+            className="rounded-md"
+          >
+            {isBuilding ? (
+              <LoaderCircle className="animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw aria-hidden="true" />
+            )}
+            Rebuild tree
+          </Button>
+          <Button
+            type="button"
+            disabled={isBuilding || !result}
+            onClick={onContinue}
+            className="rounded-md"
+          >
+            Continue to report
+            <ArrowRight aria-hidden="true" />
+          </Button>
+        </div>
       </div>
 
       {error ? (

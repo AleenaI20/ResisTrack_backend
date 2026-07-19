@@ -116,3 +116,52 @@ class PhylogenyBuildResponse(BaseModel):
     distance_matrix: list[PhylogenyDistanceRow]
     clade_assignments: list[PhylogenyCladeAssignment]
     parameters: PhylogenyParameters
+
+
+PredictionCall = Literal["likely_to_fail", "likely_to_work", "no_call"]
+EvidenceCategory = Literal[
+    "known_resistance_marker",
+    "statistical_association",
+    "no_known_signal",
+]
+TargetGateStatus = Literal[
+    "not_required_for_fail_call",
+    "not_confirmed",
+    "not_evaluated",
+]
+
+
+class PredictRequest(BaseModel):
+    detected_features: dict[str, bool] = Field(max_length=2_000)
+    organism: str | None = Field(default=None, min_length=2, max_length=120)
+
+
+class AntibioticPrediction(BaseModel):
+    drug: str
+    call: PredictionCall
+    confidence: float = Field(ge=0, le=1)
+    resistance_probability: float = Field(ge=0, le=1)
+    evidence_category: EvidenceCategory
+    supporting_features: list[str]
+    model_tier: str
+    no_call_margin: float = Field(ge=0, lt=0.5)
+    target_gate_status: TargetGateStatus
+    call_reason: str
+
+
+class PredictResponse(BaseModel):
+    schema_version: str = "1.0"
+    organism: str | None
+    supported_species: str
+    predictions: list[AntibioticPrediction]
+    matched_features: list[str]
+    unmatched_features: list[str]
+    disclaimer: str
+
+
+class PredictMetaResponse(BaseModel):
+    schema_version: str = "1.0"
+    supported_species: str
+    drugs: list[str]
+    gene_columns: list[str]
+    demo_markers: list[str]
