@@ -41,3 +41,11 @@ amr:
 
 join:
   master_table_file: "outputs/master_feature_table.csv"
+
+labels:
+  antibiotics:
+    - "ceftazidime"
+    - "ciprofloxacin"
+    - "cefuroxime"
+    - "piperacillin/tazobactam"
+  output_file: "outputs/labeled_master_table.csv"
