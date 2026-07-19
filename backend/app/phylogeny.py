@@ -21,6 +21,7 @@ from app.models import (
     PhylogenyCladeAssignment,
     PhylogenyDistanceRow,
     PhylogenyParameters,
+    PhylogenyTreeNode,
 )
 
 
@@ -82,7 +83,7 @@ def _build_distance_matrix(
     return matrix
 
 
-def _build_newick(genome_ids: list[str], matrix: np.ndarray) -> str:
+def _build_tree(genome_ids: list[str], matrix: np.ndarray):
     lower_triangle = [
         [float(matrix[row_index, column_index]) for column_index in range(row_index + 1)]
         for row_index in range(len(genome_ids))
@@ -93,10 +94,37 @@ def _build_newick(genome_ids: list[str], matrix: np.ndarray) -> str:
     )
     tree = DistanceTreeConstructor().nj(distance_matrix)
     tree.root_at_midpoint()
+    return tree
 
+
+def _serialize_tree_node(clade) -> PhylogenyTreeNode:
+    children = [_serialize_tree_node(child) for child in clade.clades]
+    name = clade.name
+    if name and name.startswith("Inner"):
+        name = None
+    branch_length = (
+        None if clade.branch_length is None else round(float(clade.branch_length), 8)
+    )
+    return PhylogenyTreeNode(
+        name=name,
+        branch_length=branch_length,
+        children=children,
+    )
+
+
+def _tree_to_newick(tree) -> str:
     output = StringIO()
     Phylo.write(tree, output, "newick")
     return output.getvalue().strip()
+
+
+def _collect_leaf_names(node: PhylogenyTreeNode) -> list[str]:
+    if not node.children:
+        return [node.name] if node.name else []
+    leaves: list[str] = []
+    for child in node.children:
+        leaves.extend(_collect_leaf_names(child))
+    return leaves
 
 
 def _assign_clades(
@@ -149,9 +177,18 @@ def build_phylogeny(request: PhylogenyBuildRequest) -> PhylogenyBuildResponse:
         for row_index, genome_id in enumerate(genome_ids)
     ]
 
+    tree = _build_tree(genome_ids, matrix)
+    structured_tree = _serialize_tree_node(tree.root)
+    leaf_names = _collect_leaf_names(structured_tree)
+    if sorted(leaf_names) != genome_ids:
+        raise PhylogenyError(
+            "Structured tree leaves do not match the input genome set."
+        )
+
     return PhylogenyBuildResponse(
         genome_count=len(genome_ids),
-        newick=_build_newick(genome_ids, matrix),
+        newick=_tree_to_newick(tree),
+        tree=structured_tree,
         distance_matrix=distance_rows,
         clade_assignments=_assign_clades(
             genome_ids,

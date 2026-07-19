@@ -102,10 +102,17 @@ class PhylogenyParameters(BaseModel):
     clade_distance_threshold: float
 
 
+class PhylogenyTreeNode(BaseModel):
+    name: str | None = None
+    branch_length: float | None = None
+    children: list["PhylogenyTreeNode"] = Field(default_factory=list)
+
+
 class PhylogenyBuildResponse(BaseModel):
     schema_version: str = "1.0"
     genome_count: int = Field(ge=2)
     newick: str
+    tree: PhylogenyTreeNode
     distance_matrix: list[PhylogenyDistanceRow]
     clade_assignments: list[PhylogenyCladeAssignment]
     parameters: PhylogenyParameters

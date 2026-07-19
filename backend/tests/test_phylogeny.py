@@ -30,12 +30,26 @@ def build_request() -> PhylogenyBuildRequest:
     )
 
 
+def _collect_leaves(node) -> list[str]:
+    if not node.children:
+        return [node.name] if node.name else []
+    leaves: list[str] = []
+    for child in node.children:
+        leaves.extend(_collect_leaves(child))
+    return leaves
+
+
 def test_build_phylogeny_returns_tree_distances_and_clades() -> None:
     result = build_phylogeny(build_request())
 
     assert result.genome_count == 3
     assert result.newick.endswith(";")
     assert all(genome_id in result.newick for genome_id in ("genome-a", "genome-b", "genome-c"))
+    assert sorted(_collect_leaves(result.tree)) == [
+        "genome-a",
+        "genome-b",
+        "genome-c",
+    ]
     assert [row.genome_id for row in result.distance_matrix] == [
         "genome-a",
         "genome-b",
@@ -55,6 +69,15 @@ def test_build_phylogeny_returns_tree_distances_and_clades() -> None:
         result.clade_assignments[2].clade_id
         != result.clade_assignments[0].clade_id
     )
+
+
+def test_structured_tree_contains_each_genome_exactly_once() -> None:
+    result = build_phylogeny(build_request())
+    leaves = _collect_leaves(result.tree)
+
+    assert len(leaves) == 3
+    assert len(set(leaves)) == 3
+    assert set(leaves) == {"genome-a", "genome-b", "genome-c"}
 
 
 def test_build_phylogeny_rejects_non_fasta_input() -> None:
@@ -95,6 +118,8 @@ async def test_phylogeny_api_returns_versioned_output(
     assert payload["schema_version"] == "1.0"
     assert payload["genome_count"] == 3
     assert payload["parameters"]["tree_method"].startswith("neighbor joining")
+    assert "children" in payload["tree"]
+    assert isinstance(payload["tree"]["children"], list)
 
 
 @pytest.mark.asyncio

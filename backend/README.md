@@ -84,6 +84,7 @@ curl -s http://127.0.0.1:8000/api/phylogeny/build \
 Response fields:
 
 - `newick`: midpoint-rooted neighbor-joining tree
+- `tree`: structured hierarchy with names, branch lengths, and children for UI rendering
 - `distance_matrix`: genome-to-genome Jaccard distances
 - `clade_assignments`: discrete clade IDs for grouped train/test splits
 - `parameters`: the exact settings used for the run
