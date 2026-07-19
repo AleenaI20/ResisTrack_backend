@@ -8,14 +8,26 @@ import { cn } from "@/lib/utils"
 import type { PhylogenyBuildResponse } from "@/types/phylogeny"
 
 const CLADE_COLORS = [
-  "var(--color-primary)",
-  "#0f766e",
-  "#b45309",
-  "#1d4ed8",
-  "#be123c",
+  "#2563eb",
+  "#16a34a",
+  "#dc2626",
+  "#9333ea",
+  "#ea580c",
+  "#0891b2",
+  "#ca8a04",
+  "#db2777",
+  "#4f46e5",
+  "#059669",
+  "#b91c1c",
   "#7c3aed",
-  "#047857",
+  "#0284c7",
+  "#65a30d",
   "#c2410c",
+  "#be185d",
+  "#0f766e",
+  "#4338ca",
+  "#15803d",
+  "#b45309",
 ]
 
 type PhylogenyTreeProps = {
@@ -44,11 +56,11 @@ export function PhylogenyTree({
   )
 
   const layout = useMemo(
-    () => layoutPhylogenyTree(result.tree, { rowHeight: 40, xScale: 280 }),
+    () => layoutPhylogenyTree(result.tree, { rowHeight: 48, xScale: 340 }),
     [result.tree]
   )
 
-  const padding = 24
+  const padding = 40
   const viewWidth = Math.max(layout.width + padding * 2, 480)
   const viewHeight = Math.max(layout.height + padding * 2, 220)
 
@@ -120,7 +132,9 @@ export function PhylogenyTree({
                     fill="none"
                     stroke="currentColor"
                     className="text-border"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 )
               })}
@@ -132,8 +146,11 @@ export function PhylogenyTree({
                       key={`node-${node.id}`}
                       cx={node.x}
                       cy={node.y}
-                      r={3}
-                      className="fill-muted-foreground/40"
+                      r={4}
+                      fill="white"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                      className="text-muted-foreground/60"
                     />
                   )
                 }
@@ -146,10 +163,34 @@ export function PhylogenyTree({
 
                 return (
                   <g key={`leaf-${node.id}`}>
+
+                    {isPrimary && (
+                      <circle
+                        cx={node.x}
+                        cy={node.y}
+                        r={12}
+                        fill="none"
+                        stroke="#fbbf24"
+                        strokeWidth={3}
+                      />
+                    )}
+
+                    {isPrimary && (
+                      <circle
+                        cx={node.x}
+                        cy={node.y}
+                        r={15}
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                        strokeDasharray="4 2"
+                      />
+                    )}
+                    
                     <circle
                       cx={node.x}
                       cy={node.y}
-                      r={isSelected || isPrimary ? 6 : 4.5}
+                      r={isPrimary ? 9 : isSelected ? 7 : 5}
                       fill={color}
                       stroke={isSelected ? "currentColor" : "transparent"}
                       strokeWidth={2}
@@ -160,16 +201,18 @@ export function PhylogenyTree({
                       onClick={() => onSelectGenome(node.name!)}
                     >
                       <title>
-                        {node.name}
-                        {isPrimary ? " (primary)" : ""} · clade {cladeId}
+                        {`${node.name}
+                      Clade ${cladeId}
+                      ${isPrimary ? "Primary uploaded genome" : ""}
+                      Branch length: ${node.branchLength.toFixed(4)}`}
                       </title>
                     </circle>
                     <text
                       x={node.x + 12}
                       y={node.y + 4}
                       className={cn(
-                        "cursor-pointer fill-foreground text-[12px]",
-                        isPrimary ? "font-semibold" : "font-medium"
+                        "cursor-pointer fill-foreground text-[13px]",
+                        isPrimary ? "font-bold" : "font-medium"
                       )}
                       onClick={() => onSelectGenome(node.name!)}
                     >
@@ -185,6 +228,9 @@ export function PhylogenyTree({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <Badge variant="secondary">★ Primary Genome</Badge>
+        <Badge variant="destructive">⭕ AMR Detected</Badge>
+      
         {result.clade_assignments
           .reduce<number[]>((ids, assignment) => {
             if (!ids.includes(assignment.clade_id)) {
