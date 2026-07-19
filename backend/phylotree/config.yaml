@@ -30,3 +30,14 @@ clustering:
   method: "average"        # scipy linkage method
   distance_threshold: 0.08 # cut height; tune and justify in write-up
   output_file: "outputs/clade_assignments.csv"
+
+amr:
+  organism: "Klebsiella_pneumoniae"
+  plus: true
+  threads_per_job: 1        # was "threads: 4" — 1 thread per job, since we now parallelize across genomes instead
+  parallel_workers: 6        # tune based on your CPU core count
+  raw_results_dir: "data/processed/amrfinder_raw"
+  matrix_file: "outputs/amr_gene_matrix.csv"
+
+join:
+  master_table_file: "outputs/master_feature_table.csv"

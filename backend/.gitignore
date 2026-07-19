@@ -13,3 +13,4 @@ phylotree/data/raw/
 phylotree/data/processed/
 phylotree/outputs/*.png
 phylotree/**/__pycache__/
+.venv/
